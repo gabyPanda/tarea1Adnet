@@ -110,10 +110,29 @@ const distribucionGenero = async (req, res = response) => {
 
 const proximosPorPensionarse = async (req, res = response) => {
     const { edad } = req.params;
-    res.json({
-        msg: 'proximos a pensionarse',
-        edad: edad
-    });
+
+    try {
+        const afiliados = await Afiliado.find(req.query)
+            .select('id nombre fechaNacimiento')
+            .lean();
+
+        const afiliadosSinId = eliminarCamposNoDeseados(afiliados);
+
+        res.status(200).json({
+            afiliados: afiliadosSinId
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            msg: 'Error al obtener afiliados',
+            error
+        });
+    }
+
+}
+
+const calculaPensionados= (edad = 0) => {
+
 }
 
 module.exports = {
