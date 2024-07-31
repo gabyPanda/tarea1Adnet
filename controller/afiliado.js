@@ -108,7 +108,7 @@ const distribucionGenero = async (req, res = response) => {
     });
 }
 
-const calculaPensionados = (fechaNacimiento = '', edad = '') => {
+const calculaEdad = (fechaNacimiento = '') => {
     const fechaNaci = new Date(fechaNacimiento);
     const hoy = new Date();
     let edadAux = hoy.getFullYear() - fechaNaci.getFullYear();
@@ -120,6 +120,10 @@ const calculaPensionados = (fechaNacimiento = '', edad = '') => {
     if (mes < 0 || (mes === 0 && dia < 0)) {
         edadAux--;
     }
+    return edadAux;
+}
+const calculaPensionados = (fechaNacimiento = '', edad = '') => {
+   const edadAux = calculaEdad(fechaNacimiento);
     
     if (edad < 65 || edadAux < 65) {
         return false;
@@ -163,7 +167,9 @@ const proximosPorPensionarse = async (req, res = response) => {
 
 
 const afiliadosRangoEdad = (req, res = response) => {
-
+    // Desarrollar un método que retorne un array de objetos de afiliados con sus fechas de nacimiento, 
+    // permitiendo seleccionar rangos de edad en intervalos de 10 años. Por lo que este par de intervalos 
+    // deberá recibirlos como parámetros en el método. Por ejemplo de 20 a 30 años, de 30 a 40 años etc
 }
 
 
