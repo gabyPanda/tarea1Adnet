@@ -108,6 +108,19 @@ const distribucionGenero = async (req, res = response) => {
     });
 }
 
+const calculaPensionados = (fechaNacimiento = '', edad = '') => {
+    const fechaNaci = new Date(fechaNacimiento);
+    const hoy = new Date();
+    const edadAux = hoy.getFullYear() - fechaNaci.getFullYear();
+    if (edad >= 65) {
+        if (edadAux >= edad) {
+            return true;
+        }
+    } else {
+        return false;
+    }
+}
+
 const proximosPorPensionarse = async (req, res = response) => {
     const { edad } = req.params;
 
@@ -117,27 +130,33 @@ const proximosPorPensionarse = async (req, res = response) => {
             .lean();
 
         const afiliadosSinId = eliminarCamposNoDeseados(afiliados);
+        const pensionados = afiliadosSinId.filter(afiliado => calculaPensionados(afiliado.fechaNacimiento, edad));
+
+        if (pensionados.length === 0) {
+            return res.status(400).json({
+                msg: 'No hay afiliados con edad mayor o igual a 65 años'
+            });
+        }
 
         res.status(200).json({
-            afiliados: afiliadosSinId
+            proximosPorPensionarse: pensionados
         });
     } catch (error) {
         console.error(error);
         res.status(500).json({
-            msg: 'Error al obtener afiliados',
+            msg: 'Error al obtener los pensionados',
             error
         });
     }
 
 }
 
-const calculaPensionados= (edad = 0) => {
 
-}
 
 module.exports = {
     obtenerAfiliados,
     crearAfiliado,
     distribucionGenero,
-    proximosPorPensionarse
+    proximosPorPensionarse,
+    calculaPensionados
 }
