@@ -121,13 +121,10 @@ const calculaPensionados = (fechaNacimiento = '', edad = '') => {
         edadAux--;
     }
     
-   // console.log(`edad de la persona: ${edadAux} y edad ingresada ${edad}`);
     if (edad < 65 || edadAux < 65) {
-        console.log('no');
         return false;
     }
     if(edadAux >= 65 || edadAux <= edad){
-        console.log('si');
         return true;
     }
     
