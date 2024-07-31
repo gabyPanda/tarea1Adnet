@@ -111,14 +111,27 @@ const distribucionGenero = async (req, res = response) => {
 const calculaPensionados = (fechaNacimiento = '', edad = '') => {
     const fechaNaci = new Date(fechaNacimiento);
     const hoy = new Date();
-    const edadAux = hoy.getFullYear() - fechaNaci.getFullYear();
-    if (edad >= 65) {
-        if (edadAux >= edad) {
-            return true;
-        }
-    } else {
+    let edadAux = hoy.getFullYear() - fechaNaci.getFullYear();
+
+    const mes = hoy.getMonth() - fechaNaci.getMonth();
+    const dia = hoy.getDate() - fechaNaci.getDate();
+
+    // Ajustar la edad si el cumpleaños aún no ha llegado este año
+    if (mes < 0 || (mes === 0 && dia < 0)) {
+        edadAux--;
+    }
+    
+   // console.log(`edad de la persona: ${edadAux} y edad ingresada ${edad}`);
+    if (edad < 65 || edadAux < 65) {
+        console.log('no');
         return false;
     }
+    if(edadAux >= 65 || edadAux <= edad){
+        console.log('si');
+        return true;
+    }
+    
+
 }
 
 const proximosPorPensionarse = async (req, res = response) => {
@@ -129,7 +142,7 @@ const proximosPorPensionarse = async (req, res = response) => {
             .select('id nombre fechaNacimiento')
             .lean();
 
-        const afiliadosSinId = eliminarCamposNoDeseados(afiliados);
+        const afiliadosSinId = eliminarCamposNoDeseados(afiliados);       
         const pensionados = afiliadosSinId.filter(afiliado => calculaPensionados(afiliado.fechaNacimiento, edad));
 
         if (pensionados.length === 0) {
@@ -152,11 +165,16 @@ const proximosPorPensionarse = async (req, res = response) => {
 }
 
 
+const afiliadosRangoEdad = (req, res = response) => {
+
+}
+
 
 module.exports = {
     obtenerAfiliados,
     crearAfiliado,
     distribucionGenero,
     proximosPorPensionarse,
-    calculaPensionados
+    calculaPensionados,
+    afiliadosRangoEdad
 }
