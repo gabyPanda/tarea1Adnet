@@ -26,7 +26,7 @@ router.get('/afiliados-rango-edad/:rango',[
     validarCampos
 ], afiliadosRangoEdad);
 
-//router.get('/afiliados-rango-edad/:rango',afiliadosRangoEdad);
+
 
 
 

@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator');
 const Afiliado = require('../models/afiliado');
 const Afiliacion = require('../models/afiliacion');
 const { format, subYears } = require('date-fns');
-const { calculaEdad, calculaPensionados } = require('../helpers/calculos');
+const { calculaPensionados } = require('../helpers/calculos');
 
 const eliminarCamposNoDeseados = (documentos) => {
     return documentos.map(documento => {
