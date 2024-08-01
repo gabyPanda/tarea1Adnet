@@ -1,6 +1,6 @@
 const { request, response } = require('express');
 const { validationResult } = require('express-validator');
-const Afiliacion = require('../models/afiliacion');//agrego directamente el modelo Usuario, permite crear instancias del modelo
+const Afiliacion = require('../models/afiliacion');
 
 
 
@@ -18,17 +18,13 @@ res.json({
 }
 
 const crearAfiliacion = async (req = request, res = response) => {
-    //req lo que se esta solicitando
     const { fechaInicio, tipo } = req.body;
 
-    const afiliacion = new Afiliacion({ fechaInicio, tipo });//campos que quiero grabar en la creacion del usuario
+    const afiliacion = new Afiliacion({ fechaInicio, tipo });
 
-    //guardar en mongoDB
-    await afiliacion.save(); //await para que espere la grabacion
-    //usualmente se manda un objeto en formato json
+    await afiliacion.save(); 
     res.status(201).json({
         afiliacion
-        //msg:'post aliacion'
     });
 }
 

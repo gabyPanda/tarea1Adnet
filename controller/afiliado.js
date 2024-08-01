@@ -2,7 +2,8 @@ const { request, response } = require('express');
 const { validationResult } = require('express-validator');
 const Afiliado = require('../models/afiliado');
 const Afiliacion = require('../models/afiliacion');
-
+const { format, subYears } = require('date-fns');
+const { calculaEdad, calculaPensionados } = require('../helpers/calculos');
 
 const eliminarCamposNoDeseados = (documentos) => {
     return documentos.map(documento => {
@@ -26,7 +27,7 @@ const obtenerAfiliados = async (req = request, res = response) => {
                 path: 'afiliacion',
                 select: 'fechaInicio tipo'
             })
-            .lean(); // Usar .lean() para obtener objetos planos
+            .lean();
 
         // Limpiar el campo _id de la afiliación
         const afiliadosSinId = eliminarCamposNoDeseados(afiliados);
@@ -49,7 +50,6 @@ const crearAfiliado = async (req, res = response) => {
 
     try {
 
-        //ver si una producto existe con ese nombre
         const afiliadoDB = await Afiliado.findOne({ nombre: body.nombre });
 
         if (afiliadoDB) {
@@ -66,7 +66,6 @@ const crearAfiliado = async (req, res = response) => {
             });
         }
 
-        // Generar la data a guardar
         const data = {
             id: body.id,
             nombre: body.nombre,
@@ -75,7 +74,6 @@ const crearAfiliado = async (req, res = response) => {
             afiliacion: body.afiliacion
         };
 
-        // Crear y guardar el nuevo afiliado
         const nuevoAfiliado = new Afiliado(data);
         await nuevoAfiliado.save();
 
@@ -108,32 +106,7 @@ const distribucionGenero = async (req, res = response) => {
     });
 }
 
-const calculaEdad = (fechaNacimiento = '') => {
-    const fechaNaci = new Date(fechaNacimiento);
-    const hoy = new Date();
-    let edadAux = hoy.getFullYear() - fechaNaci.getFullYear();
 
-    const mes = hoy.getMonth() - fechaNaci.getMonth();
-    const dia = hoy.getDate() - fechaNaci.getDate();
-
-    // Ajustar la edad si el cumpleaños aún no ha llegado este año
-    if (mes < 0 || (mes === 0 && dia < 0)) {
-        edadAux--;
-    }
-    return edadAux;
-}
-const calculaPensionados = (fechaNacimiento = '', edad = '') => {
-   const edadAux = calculaEdad(fechaNacimiento);
-    
-    if (edad < 65 || edadAux < 65) {
-        return false;
-    }
-    if(edadAux >= 65 || edadAux <= edad){
-        return true;
-    }
-    
-
-}
 
 const proximosPorPensionarse = async (req, res = response) => {
     const { edad } = req.params;
@@ -143,13 +116,12 @@ const proximosPorPensionarse = async (req, res = response) => {
             .select('id nombre fechaNacimiento')
             .lean();
 
-        const afiliadosSinId = eliminarCamposNoDeseados(afiliados);       
+        const afiliadosSinId = eliminarCamposNoDeseados(afiliados);
         const pensionados = afiliadosSinId.filter(afiliado => calculaPensionados(afiliado.fechaNacimiento, edad));
-
-        if (pensionados.length === 0) {
-            return res.status(400).json({
-                msg: 'No hay afiliados con edad mayor o igual a 65 años'
-            });
+       
+        // un for para darle formato a la fecha de nacimiento
+        for (let i = 0; i < pensionados.length; i++) {
+            pensionados[i].fechaNacimiento = format(pensionados[i].fechaNacimiento, 'yyyy-MM-dd');
         }
 
         res.status(200).json({
@@ -165,19 +137,48 @@ const proximosPorPensionarse = async (req, res = response) => {
 
 }
 
+const afiliadosRangoEdad = async (req, res = response) => {
+    const { rango } = req.params;
+    const rangoAux = rango.split('-');
+    const rango1 = rangoAux[0];
+    const rango2 = rangoAux[1];
 
-const afiliadosRangoEdad = (req, res = response) => {
-    // Desarrollar un método que retorne un array de objetos de afiliados con sus fechas de nacimiento, 
-    // permitiendo seleccionar rangos de edad en intervalos de 10 años. Por lo que este par de intervalos 
-    // deberá recibirlos como parámetros en el método. Por ejemplo de 20 a 30 años, de 30 a 40 años etc
+    try {
+        const fechaActual = new Date();
+        const fechaFin = subYears(fechaActual, rango1);
+        const fechaInicio = subYears(fechaActual, rango2);
+
+        const query = { fechaNacimiento: { $gte: fechaInicio, $lte: fechaFin } };
+
+        const [afiliados] = await Promise.all([
+            Afiliado.find(query)
+                .select('id nombre fechaNacimiento')
+                .lean()
+        ]);
+
+        //para eliminar _id de la respuesta json
+        const afiliadosSinId = eliminarCamposNoDeseados(afiliados);
+
+
+        // un for para darle formato a la fecha de nacimiento
+        for (let i = 0; i < afiliadosSinId.length; i++) {
+            afiliadosSinId[i].fechaNacimiento = format(afiliadosSinId[i].fechaNacimiento, 'yyyy-MM-dd');
+        }
+
+        res.status(200).json({
+            afiliadosSinId
+        });
+
+
+    } catch (error) {
+        res.json(error);
+    }
 }
-
 
 module.exports = {
     obtenerAfiliados,
     crearAfiliado,
     distribucionGenero,
     proximosPorPensionarse,
-    calculaPensionados,
     afiliadosRangoEdad
 }

@@ -10,7 +10,7 @@ const AfiliadoSchema = Schema ({
         type: String
     },
     fechaNacimiento: {
-        type: String
+        type: Date
     },
     genero: {
         type: String

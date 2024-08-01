@@ -3,7 +3,7 @@ const {Schema, model } = require('mongoose');
 
 const AfiliacionSchema = Schema ({
     fechaInicio: {
-        type: String
+        type: Date
     },
     tipo: {
         type: String
